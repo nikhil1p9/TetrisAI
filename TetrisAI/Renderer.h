@@ -8,8 +8,9 @@ private:
 	Renderer();
 
 public:
-	void render( Game game);
+	void render(Game game);
 	void clear_screen();
+	void game_over_screen(Game game);
 
 	static Renderer* get() {
 		if (Intance == nullptr) {

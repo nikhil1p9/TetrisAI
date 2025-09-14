@@ -1,8 +1,8 @@
 #include "Piece.h"
 #include<iostream>
 #include<algorithm>
-
-bool Piece::rotate(std::vector<std::vector<bool>>& board)
+#include "Board.h"
+bool Piece::rotate(Board& board)
 {
 	int old_rotation = this->rotation;
 	this->rotation = (this->rotation + 1) % 4;
@@ -13,50 +13,36 @@ bool Piece::rotate(std::vector<std::vector<bool>>& board)
 	return true;
 }
 
-bool Piece::move(std::vector<std::vector<bool>>& board, int x_offset, int y_offset)
+bool Piece::move(Board& board, int x_offset, int y_offset)
 {
+	std::vector<int>grid = board.get_grid();
+	std::vector<int>raw_piece_matrix = this->raw_piece_matrix();
+	if (position[1] + y_offset >=0 and position[1] + y_offset <grid.size()) 
+	if ((raw_piece_matrix.back() << position[0]) & grid[position[1] + y_offset]) return false;
+	//if (x_offset < 0 && (raw_piece_matrix[0] << (position[0] + x_offset)) & (1 << (board.get_width()))) return false;
+
 	if (is_colliding(board, x_offset, y_offset)) {
 		return false;
 	}
+
 	position[0] += x_offset;
 	position[1] += y_offset;
 	return true;
 }
 
 
-bool Piece::is_colliding(std::vector<std::vector<bool>>& board, int x_offset, int y_offset)
+bool Piece::is_colliding(Board& board, int x_offset, int y_offset)
 {
-	std::vector<std::vector<bool>> piece_matrix = this->get_piece_matrix();
-	int* position = this->get_position();
-	for (int i = 0; i < piece_matrix.size(); ++i) {
-		for (int j = 0; j < piece_matrix[i].size(); ++j) {
-			if (piece_matrix[i][j]) {
-				int board_x = position[0] + j + x_offset;
-				int board_y = position[1] + i + y_offset;
-				if (board_y < 0) return (!(board_x >= 0 and board_x<board[0].size()));
-				if (board_x < 0 || board_x >= board[0].size() || board_y < 0 || board_y >= board.size() || board[board_y][board_x]) {
-					return true;
-				}
-			}
-		}
-	}
-	return false;
+	return board.is_colliding(this, x_offset, y_offset);
 }
 
 std::vector<std::vector<bool>> Piece::get_piece_matrix()
 {
-    std::vector<std::vector<bool>> output = this->raw_piece_matrix();
-	int var = this->rotation;
-	while (var--) {
-		for (int i = 0; i < output.size(); ++i) {
-			for (int j = i; j < output[i].size(); ++j) {
-				int temp = output[i][j];
-				output[i][j] = output[j][i];
-				output[j][i] = temp;
-			}
-		}
-		for (int i = 0; i < output.size(); ++i) {
-			std::reverse(output[i].begin(), output[i].end());
+	std::vector<std::vector<bool>> output(raw_piece_matrix().size(), std::vector<bool>(4, 0));
+
+	for (int i = 0; i < output.size(); ++i) {
+		for (int j = 0; j < output[i].size(); ++j) {
+			output[i][j] = (raw_piece_matrix()[i] >> j) & 1;
 		}
 	}
     return output;

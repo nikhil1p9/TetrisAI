@@ -5,23 +5,8 @@
 
 void Game::delete_lines()
 {
-	int no_of_lines_deleted = 0;
-	for(int i = 0; i < board.size(); ++i) {
-		bool full_line = true;	
-		for (int j = 0; j < board[i].size(); ++j) {
-			if (!board[i][j]) {
-				full_line = false;
-				break;
-			}
-		}
-		if(full_line) {
-			no_of_lines_deleted++;
-			board.erase(board.begin() + i);
-			board.insert(board.begin(), std::vector<bool>(board[0].size(), false));
-		}
-		
-	}
 	int line_scores[] = {0, 2, 5, 15, 60};
+	int no_of_lines_deleted = this->board.delete_lines();
 	score +=  line_scores[no_of_lines_deleted] ;
 }
 
@@ -38,7 +23,14 @@ void Game::spawn_piece() {
 	};
 
 	int piece_number = rand() % 7;
-	this->hanging_piece = pieces[piece_number]; 
+	free(this->hanging_piece);
+	this->hanging_piece = this->next_piece;
+		
+	this->next_piece = pieces[piece_number]; 
+
+	for(int i = 0; i < rand() % 4; ++i) {
+		this->next_piece->rotate(board);
+	}
 
 	for (int i = 0; i < 7; ++i) {
 		if (i == piece_number) continue;
@@ -55,19 +47,9 @@ void Game::tick()
 {
 
 	if (hanging_piece->is_colliding(board,0,1)) {
-		int* position = hanging_piece->get_position();
-		std::vector<std::vector<bool>> piece_matrix = hanging_piece->get_piece_matrix();
-		for (int i = 0; i < piece_matrix.size(); ++i) {
-			for (int j = 0; j < piece_matrix[i].size(); ++j) {
-				if (piece_matrix[i][j]) {
-					if (position[1] + i < 0) {
-						game_over = true;
-						return;
-					}
-					board[position[1] + i][position[0] + j] = true;
-				}
-			}
-		}
+
+		game_over |= !board.drop_piece(hanging_piece);
+
 		spawn_piece();
 		delete_lines();
 	}
